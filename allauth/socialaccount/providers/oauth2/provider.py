@@ -139,7 +139,7 @@ class OAuth2Provider(Provider):
                 )
             )
             end_time = time.perf_counter()
-            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {beginning_time - end_time}")
+            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug("The execution of 'redirect' was successful.")
             return response_redirect
         except OAuth2Error as e:
@@ -151,5 +151,5 @@ class OAuth2Provider(Provider):
                 request, self, extra_context={"state_id": state_id}, exception=e
             )
             end_time = time.perf_counter()
-            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {beginning_time - end_time}")
+            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'redirect' failed.")

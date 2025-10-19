@@ -14,7 +14,7 @@ class SAMLAccount(ProviderAccount):
 
 
 class SAMLProvider(Provider):
-    saml_logger.debug("My Provider has been instantiated.")
+    saml_logger.debug("My SAMLProvider has been instantiated.")
     id = "saml"
     name = "SAML"
     supports_redirect = True
@@ -140,7 +140,7 @@ class SAMLProvider(Provider):
         )
         end_time = time.perf_counter()
 
-        saml_logger.info(f"'redirect' @ allauth.socialaccount.providers.saml.provder called w/ eval time {beginning_time - end_time}")
+        saml_logger.info(f"'redirect' @ allauth.socialaccount.providers.saml.provder called w/ eval time {end_time - beginning_time}")
 
         return HttpResponseRedirect(redirect)
 

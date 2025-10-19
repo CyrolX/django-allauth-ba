@@ -65,7 +65,7 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
         # return self.get_provider().sociallogin_from_response(request, data)
         sociallogin_return_value = self.get_provider().sociallogin_from_response(request, data)
         end_time = time.perf_counter()
-        oidc_logger.info(f"'complete_login' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {beginning_time - end_time}")
+        oidc_logger.info(f"'complete_login' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
         return sociallogin_return_value
 
     def _fetch_user_info(self, access_token: str) -> dict:
