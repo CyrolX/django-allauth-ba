@@ -13,8 +13,12 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Error
 from allauth.socialaccount.providers.oauth2.utils import generate_code_challenge
 from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
 
+# BA Imports
+import time
+from allauth.allauth_loggers import oidc_logger
 
 class OAuth2Provider(Provider):
+    oidc_logger.debug("My OAuth2Provider has been instantiated.")
     pkce_enabled_default = False
     oauth2_adapter_class: Type[OAuth2Adapter]
     supports_redirect = True
@@ -100,7 +104,9 @@ class OAuth2Provider(Provider):
         kwargs["auth_params"] = self.get_auth_params_from_request(request, action)
         return kwargs
 
+    # BA: This function should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
+        beginning_time = time.perf_counter()
         app = self.app
         oauth2_adapter = self.get_oauth2_adapter(request)
         client = oauth2_adapter.get_client(request, app)
@@ -121,12 +127,29 @@ class OAuth2Provider(Provider):
         )
         client.state = state_id
         try:
-            return HttpResponseRedirect(
+            # Original:
+            # return HttpResponseRedirect(
+            #    client.get_redirect_url(
+            #        oauth2_adapter.authorize_url, scope, auth_params
+            #    )
+            #)
+            response_redirect = HttpResponseRedirect(
                 client.get_redirect_url(
                     oauth2_adapter.authorize_url, scope, auth_params
                 )
             )
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {beginning_time - end_time}")
+            oidc_logger.debug("The execution of 'redirect' was successful.")
+            return response_redirect
         except OAuth2Error as e:
-            return render_authentication_error(
+            # Original:
+            #return render_authentication_error(
+            #    request, self, extra_context={"state_id": state_id}, exception=e
+            #)
+            auth_error_return_value = render_authentication_error(
                 request, self, extra_context={"state_id": state_id}, exception=e
             )
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {beginning_time - end_time}")
+            oidc_logger.debug(f"'redirect' failed.")

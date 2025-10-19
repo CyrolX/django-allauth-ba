@@ -22,6 +22,10 @@ from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.internal import statekit
 from allauth.utils import get_request_param
 
+# BA Imports
+import time
+from allauth.allauth_loggers import saml_logger, oidc_logger
+
 
 if not allauth_settings.SOCIALACCOUNT_ENABLED:
     raise ImproperlyConfigured(
@@ -126,8 +130,17 @@ class SocialAccount(models.Model):
         verbose_name = _("social account")
         verbose_name_plural = _("social accounts")
 
+    # BA: This function should be measured.
     def authenticate(self):
-        return authenticate(account=self)
+        # Original:
+        # return authenticate(account=self)
+        beginning_time = time.perf_counter()
+        return_value = authenticate(account=self)
+        end_time = time.perf_counter()
+        saml_logger.info(f"'authenticate' @ allauth.socialaccount.models called w/ eval time {end_time - beginning_time}.")
+        oidc_logger.info(f"'authenticate' @ allauth.socialaccount.models called w/ eval time {end_time - beginning_time}.")
+        
+        return return_value
 
     def __str__(self):
         from .helpers import socialaccount_user_display

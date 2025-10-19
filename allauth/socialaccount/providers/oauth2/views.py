@@ -25,6 +25,9 @@ from allauth.socialaccount.providers.base.views import BaseLoginView
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client, OAuth2Error
 from allauth.utils import build_absolute_uri, get_request_param
 
+# BA Imports
+import time
+from allauth.allauth_loggers import oidc_logger
 
 class OAuth2Adapter:
     expires_in_key = "expires_in"
@@ -110,12 +113,17 @@ class OAuth2LoginView(OAuth2View, BaseLoginView):
     def get_provider(self):
         return self.adapter.get_provider()
 
-
 class OAuth2CallbackView(OAuth2View):
+    # BA: This function should be measured.
     def dispatch(self, request, *args, **kwargs):
+        oidc_logger.debug("The OAuth2CallbackView's dispatch method has been called.")
+        beginning_time = time.perf_counter()
         provider = self.adapter.get_provider()
         state, resp = self._get_state(request, provider)
         if resp:
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug(f"Execution of 'dispatch' successful. Termination was due to a response being present in the state.")
             return resp
         if "error" in request.GET or "code" not in request.GET:
             # Distinguish cancel from error
@@ -124,15 +132,19 @@ class OAuth2CallbackView(OAuth2View):
                 error = AuthError.CANCELLED
             else:
                 error = AuthError.UNKNOWN
-            return render_authentication_error(
-                request,
-                provider,
-                error=error,
-                extra_context={
-                    "state": state,
-                    "callback_view": self,
-                },
-            )
+            # Original
+            #return render_authentication_error(
+            #    request,
+            #    provider,
+            #    error=error,
+            #    extra_context={
+            #        "state": state,
+            #        "callback_view": self,
+            #    },
+            #)
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug(f"'dispatch' failed: Error was {error}")
         app = provider.app
         client = self.adapter.get_client(self.request, app)
 
@@ -148,16 +160,30 @@ class OAuth2CallbackView(OAuth2View):
             )
             login.token = token
             login.state = state
-            return complete_social_login(request, login)
+            sociallogin_return = complete_social_login(request, login)
+            # Original:
+            #return complete_social_login(request, login)
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug(f"Execution of 'dispatch' successful.")
+            return sociallogin_return
         except (
             PermissionDenied,
             OAuth2Error,
             RequestException,
             ProviderException,
         ) as e:
-            return render_authentication_error(
+            auth_error = render_authentication_error(
                 request, provider, exception=e, extra_context={"state": state}
             )
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug(f"'dispatch' failed: Error was {e}")
+            return auth_error
+            # Original:
+            #return render_authentication_error(
+            #    request, provider, exception=e, extra_context={"state": state}
+            #)
 
     def _redirect_strict_samesite(self, request, provider):
         if (

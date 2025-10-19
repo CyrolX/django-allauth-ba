@@ -1,5 +1,6 @@
 import binascii
-import logging
+# See l.30-32
+#import logging
 
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
@@ -23,8 +24,13 @@ from allauth.socialaccount.sessions import LoginSession
 
 from .utils import build_auth, build_saml_config, decode_relay_state, get_app_or_404
 
+# BA Imports
+import time
+from allauth.allauth_loggers import saml_logger
 
-logger = logging.getLogger(__name__)
+# Original:
+# logger = logging.getLogger(__name__)
+# We comment the logger out so it doesn't interfere with our logging endeavours.
 
 
 class SAMLViewMixin:
@@ -36,11 +42,14 @@ class SAMLViewMixin:
         app = self.get_app(organization_slug)
         return app.get_provider(self.request)
 
-
+# BA: As the Assertion Consumer Service is a vital part of a SAML ecosystem, this view
+# should be measured.
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(login_not_required, name="dispatch")
 class ACSView(SAMLViewMixin, View):
     def dispatch(self, request, organization_slug):
+        saml_logger.debug("The ACSView's dispatch method has been called.")
+        beginning_time = time.perf_counter()
         url = reverse(
             "saml_finish_acs",
             kwargs={"organization_slug": organization_slug},
@@ -49,15 +58,20 @@ class ACSView(SAMLViewMixin, View):
         acs_session = LoginSession(request, "saml_acs_session", "saml-acs-session")
         acs_session.store.update({"request": httpkit.serialize_request(request)})
         acs_session.save(response)
+        end_time = time.perf_counter()
+        saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.ACSView called w/ eval time {end_time - beginning_time}")
         return response
 
 
 acs = ACSView.as_view()
 
-
+# BA: As the Assertion Consumer Service is a vital part of a SAML ecosystem, this view
+# should be measured.
 @method_decorator(login_not_required, name="dispatch")
 class FinishACSView(SAMLViewMixin, View):
     def dispatch(self, request, organization_slug):
+        saml_logger.debug("The FinishACSView's dispatch method has been called.")
+        beginning_time = time.perf_counter()
         provider = self.get_provider(organization_slug)
         acs_session = LoginSession(request, "saml_acs_session", "saml-acs-session")
         acs_request = None
@@ -66,8 +80,15 @@ class FinishACSView(SAMLViewMixin, View):
             acs_request = httpkit.deserialize_request(acs_request_data, HttpRequest())
         acs_session.delete()
         if not acs_request:
-            logger.error("Unable to finish login, SAML ACS session missing")
-            return render_authentication_error(request, provider)
+            # See l.30-32
+            #logger.error("Unable to finish login, SAML ACS session missing")
+            # Original:
+            #return render_authentication_error(request, provider)
+            auth_error = render_authentication_error(request, provider)
+            end_time = time.perf_counter()
+            saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
+            saml_logger.debug("'dispatch' failed: No ACS Session.")
+            return auth_error
 
         auth = build_auth(acs_request, provider)
         error_reason = None
@@ -87,11 +108,21 @@ class FinishACSView(SAMLViewMixin, View):
         if errors:
             # e.g. ['invalid_response']
             error_reason = auth.get_last_error_reason() or error_reason
-            logger.error(
-                "Error processing SAML ACS response: %s: %s"
-                % (", ".join(errors), error_reason)
-            )
-            return render_authentication_error(
+            # See l.30-32
+            #logger.error(
+            #    "Error processing SAML ACS response: %s: %s"
+            #    % (", ".join(errors), error_reason)
+            #)
+            # Original:
+            #return render_authentication_error(
+            #    request,
+            #    provider,
+            #    extra_context={
+            #        "saml_errors": errors,
+            #        "saml_last_error_reason": error_reason,
+            #    },
+            #)
+            auth_error = render_authentication_error(
                 request,
                 provider,
                 extra_context={
@@ -99,10 +130,21 @@ class FinishACSView(SAMLViewMixin, View):
                     "saml_last_error_reason": error_reason,
                 },
             )
+            end_time = time.perf_counter()
+            saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
+            saml_logger.debug("'dispatch' failed: ACS Response processing failed.")
+            return auth_error
         if not auth.is_authenticated():
-            return render_authentication_error(
+            # Original:
+            #return render_authentication_error(
+            #    request, provider, error=AuthError.CANCELLED
+            #)
+            auth_error = render_authentication_error(
                 request, provider, error=AuthError.CANCELLED
             )
+            end_time = time.perf_counter()
+            saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
+            saml_logger.debug("'dispatch' failed: User is not authenticated.")
         login = provider.sociallogin_from_response(request, auth)
         # (*) If we (the SP) initiated the login, there should be a matching
         # state.
@@ -115,13 +157,26 @@ class FinishACSView(SAMLViewMixin, View):
                 "reject_idp_initiated_sso", True
             )
             if reject:
-                logger.error("IdP initiated SSO rejected")
-                return render_authentication_error(request, provider)
+                # See l.30-32
+                #logger.error("IdP initiated SSO rejected")
+                # Original:
+                #return render_authentication_error(request, provider)
+                auth_error = render_authentication_error(request, provider)
+                end_time = time.perf_counter()
+                saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
+                saml_logger.debug("'dispatch' failed: IdP-initiated SSO is not allowed.")
+                return auth_error
             next_url = decode_relay_state(acs_request.POST.get("RelayState"))
             login.state["process"] = AuthProcess.LOGIN
             if next_url:
                 login.state["next"] = next_url
-        return complete_social_login(request, login)
+        sociallogin_return = complete_social_login(request, login)
+        end_time = time.perf_counter()
+        saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
+        saml_logger.debug("Execution of 'dispatch' was successful.")
+        # Original:
+        #return complete_social_login(request, login)
+        return sociallogin_return
 
 
 finish_acs = FinishACSView.as_view()
@@ -150,10 +205,11 @@ class SLSView(SAMLViewMixin, View):
         errors = auth.get_errors()
         if errors:
             error_reason = auth.get_last_error_reason() or error_reason
-            logger.error(
-                "Error processing SAML SLS response: %s: %s"
-                % (", ".join(errors), error_reason)
-            )
+            # See l.30-32
+            #logger.error(
+            #    "Error processing SAML SLS response: %s: %s"
+            #    % (", ".join(errors), error_reason)
+            #)
             resp = HttpResponse(error_reason, content_type="text/plain")
             resp.status_code = 400
             return resp

@@ -12,6 +12,9 @@ from allauth.socialaccount.providers.oauth2.views import (
 )
 from allauth.utils import build_absolute_uri
 
+# BA Imports
+import time
+from allauth.allauth_loggers import saml_logger, oidc_logger
 
 class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
     def __init__(self, request, provider_id):
@@ -48,7 +51,9 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
     def profile_url(self):
         return self.openid_config["userinfo_endpoint"]
 
+    # BA: This function should be measured.
     def complete_login(self, request, app, token: SocialToken, **kwargs):
+        beginning_time = time.perf_counter()
         id_token_str = kwargs["response"].get("id_token")
         fetch_userinfo = app.settings.get("fetch_userinfo", True)
         data = {}
@@ -56,7 +61,12 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
             data["userinfo"] = self._fetch_user_info(token.token)
         if id_token_str:
             data["id_token"] = self._decode_id_token(app, id_token_str)
-        return self.get_provider().sociallogin_from_response(request, data)
+        # Original:
+        # return self.get_provider().sociallogin_from_response(request, data)
+        sociallogin_return_value = self.get_provider().sociallogin_from_response(request, data)
+        end_time = time.perf_counter()
+        oidc_logger.info(f"'complete_login' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {beginning_time - end_time}")
+        return sociallogin_return_value
 
     def _fetch_user_info(self, access_token: str) -> dict:
         response = (

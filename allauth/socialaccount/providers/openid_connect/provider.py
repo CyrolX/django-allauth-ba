@@ -14,6 +14,10 @@ from allauth.socialaccount.providers.openid_connect.views import (
     OpenIDConnectOAuth2Adapter,
 )
 
+# BA Imports
+import time
+from allauth.allauth_loggers import oidc_logger
+
 
 def _pick_data(data: dict) -> dict:
     # Prefer userinfo, it likely has more info compared to the ID token.
@@ -106,9 +110,14 @@ class OpenIDConnectProvider(OAuth2Provider):
     def get_oauth2_adapter(self, request):
         return self.oauth2_adapter_class(request, self.app.provider_id)
 
+    # BA: This function should be measured.
     def verify_token(self, request, token):
+        beginning_time = time.perf_counter()
         id_token = token.get("id_token")
         if not id_token:
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'verify_token' @ allauth.socialaccount.providers.openid_connect.provider called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug("'verify_token' failed: ID-Token missing.")
             raise get_adapter().validation_error("invalid_token")
         try:
             oauth2_adapter = self.get_oauth2_adapter(request)
@@ -121,8 +130,14 @@ class OpenIDConnectProvider(OAuth2Provider):
                 lookup_kid=jwtkit.lookup_kid_jwk,
             )
         except (OAuth2Error, requests.RequestException) as e:
+            end_time = time.perf_counter()
+            oidc_logger.info(f"'verify_token' @ allauth.socialaccount.providers.openid_connect.provider called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug("'verify_token' failed: Invalid Token.")
             raise get_adapter().validation_error("invalid_token") from e
         login = self.sociallogin_from_response(request, identity_data)
+        end_time = time.perf_counter()
+        oidc_logger.info(f"'verify_token' @ allauth.socialaccount.providers.openid_connect.provider called w/ eval time {end_time - beginning_time}")
+        oidc_logger.debug("The execution of 'verify_token' was successful.")
         return login
 
 

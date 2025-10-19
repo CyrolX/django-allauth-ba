@@ -4,12 +4,17 @@ from django.utils.http import urlencode
 
 from allauth.socialaccount.providers.base import Provider, ProviderAccount
 
+# BA Imports
+import time
+from allauth.allauth_loggers import saml_logger
+
 
 class SAMLAccount(ProviderAccount):
     pass
 
 
 class SAMLProvider(Provider):
+    saml_logger.debug("My Provider has been instantiated.")
     id = "saml"
     name = "SAML"
     supports_redirect = True
@@ -116,9 +121,11 @@ class SAMLProvider(Provider):
 
         return attributes
 
+    # BA: This should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
         from allauth.socialaccount.providers.saml.utils import build_auth
 
+        beginning_time = time.perf_counter()
         auth = build_auth(request, self)
         # If we pass `return_to=None` `auth.login` will use the URL of the
         # current view.
@@ -131,6 +138,10 @@ class SAMLProvider(Provider):
             state_id=auth.get_last_request_id(),
             **kwargs,
         )
+        end_time = time.perf_counter()
+
+        saml_logger.info(f"'redirect' @ allauth.socialaccount.providers.saml.provder called w/ eval time {beginning_time - end_time}")
+
         return HttpResponseRedirect(redirect)
 
 
