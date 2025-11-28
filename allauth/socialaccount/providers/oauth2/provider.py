@@ -106,7 +106,7 @@ class OAuth2Provider(Provider):
 
     # BA: This function should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
-        beginning_time = time.perf_counter()
+        beginning_time = time.process_time()
         app = self.app
         oauth2_adapter = self.get_oauth2_adapter(request)
         client = oauth2_adapter.get_client(request, app)
@@ -138,7 +138,7 @@ class OAuth2Provider(Provider):
                     oauth2_adapter.authorize_url, scope, auth_params
                 )
             )
-            end_time = time.perf_counter()
+            end_time = time.process_time()
             oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug("The execution of 'redirect' was successful.")
             return response_redirect
@@ -150,6 +150,7 @@ class OAuth2Provider(Provider):
             auth_error_return_value = render_authentication_error(
                 request, self, extra_context={"state_id": state_id}, exception=e
             )
-            end_time = time.perf_counter()
+            end_time = time.process_time()
             oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'redirect' failed.")
+            return auth_error_return_value

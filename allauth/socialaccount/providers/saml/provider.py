@@ -125,11 +125,13 @@ class SAMLProvider(Provider):
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
         from allauth.socialaccount.providers.saml.utils import build_auth
 
-        beginning_time = time.perf_counter()
+        beginning_time = time.process_time()
         auth = build_auth(request, self)
+        build_auth_end_time = time.process_time()
         # If we pass `return_to=None` `auth.login` will use the URL of the
         # current view.
         redirect = auth.login(return_to="")
+        auth_login_end_time = time.process_time()
         self.stash_redirect_state(
             request,
             process,
@@ -138,8 +140,9 @@ class SAMLProvider(Provider):
             state_id=auth.get_last_request_id(),
             **kwargs,
         )
-        end_time = time.perf_counter()
-
+        end_time = time.process_time()
+        saml_logger.info(f"'build_auth' @ allauth.socialaccount.providers.saml.provder called w/ eval time {build_auth_end_time - beginning_time}")
+        saml_logger.info(f"'login' @ allauth.socialaccount.providers.saml.provder called w/ eval time {auth_login_end_time - build_auth_end_time}")
         saml_logger.info(f"'redirect' @ allauth.socialaccount.providers.saml.provder called w/ eval time {end_time - beginning_time}")
 
         return HttpResponseRedirect(redirect)

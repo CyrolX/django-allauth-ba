@@ -134,9 +134,9 @@ class SocialAccount(models.Model):
     def authenticate(self):
         # Original:
         # return authenticate(account=self)
-        beginning_time = time.perf_counter()
+        beginning_time = time.process_time()
         return_value = authenticate(account=self)
-        end_time = time.perf_counter()
+        end_time = time.process_time()
         saml_logger.info(f"'authenticate' @ allauth.socialaccount.models called w/ eval time {end_time - beginning_time}.")
         oidc_logger.info(f"'authenticate' @ allauth.socialaccount.models called w/ eval time {end_time - beginning_time}.")
         

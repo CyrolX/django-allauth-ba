@@ -5,6 +5,10 @@ from django.utils.http import urlencode
 
 from allauth.socialaccount.adapter import get_adapter
 
+# BA Imports
+import time
+from allauth.allauth_loggers import oidc_logger
+
 
 class OAuth2Error(Exception):
     pass
@@ -49,7 +53,9 @@ class OAuth2Client:
         params.update(extra_params)
         return "%s?%s" % (authorization_url, urlencode(params))
 
+    # BA: This function should be measured.
     def get_access_token(self, code, pkce_code_verifier=None, extra_data=None):
+        beginning_time = time.process_time()
         data = {
             "redirect_uri": self.callback_url,
             "grant_type": "authorization_code",
@@ -100,7 +106,13 @@ class OAuth2Client:
             else:
                 access_token = dict(parse_qsl(resp.text))
         if not access_token or "access_token" not in access_token:
+            end_time = time.process_time()
+            oidc_logger.info(f"'get_access_token' @ allauth.socialaccount.providers.oauth2.client called w/ eval time {end_time - beginning_time}")
+            oidc_logger.debug(f"'get_access_token' failed.")
             raise OAuth2Error("Error retrieving access token: %s" % resp.content)
+        end_time = time.process_time()
+        oidc_logger.info(f"'get_access_token' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
+        oidc_logger.debug(f"The execution of 'get_access_token' was successful.")
         return access_token
 
     def _strip_empty_keys(self, params):

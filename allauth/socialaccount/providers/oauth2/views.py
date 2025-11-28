@@ -117,11 +117,11 @@ class OAuth2CallbackView(OAuth2View):
     # BA: This function should be measured.
     def dispatch(self, request, *args, **kwargs):
         oidc_logger.debug("The OAuth2CallbackView's dispatch method has been called.")
-        beginning_time = time.perf_counter()
+        beginning_time = time.process_time()
         provider = self.adapter.get_provider()
         state, resp = self._get_state(request, provider)
         if resp:
-            end_time = time.perf_counter()
+            end_time = time.process_time()
             oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"Execution of 'dispatch' successful. Termination was due to a response being present in the state.")
             return resp
@@ -142,7 +142,7 @@ class OAuth2CallbackView(OAuth2View):
             #        "callback_view": self,
             #    },
             #)
-            end_time = time.perf_counter()
+            end_time = time.process_time()
             oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'dispatch' failed: Error was {error}")
         app = provider.app
@@ -163,7 +163,7 @@ class OAuth2CallbackView(OAuth2View):
             sociallogin_return = complete_social_login(request, login)
             # Original:
             #return complete_social_login(request, login)
-            end_time = time.perf_counter()
+            end_time = time.process_time()
             oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"Execution of 'dispatch' successful.")
             return sociallogin_return
@@ -176,7 +176,7 @@ class OAuth2CallbackView(OAuth2View):
             auth_error = render_authentication_error(
                 request, provider, exception=e, extra_context={"state": state}
             )
-            end_time = time.perf_counter()
+            end_time = time.process_time()
             oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'dispatch' failed: Error was {e}")
             return auth_error

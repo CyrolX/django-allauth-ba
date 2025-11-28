@@ -53,7 +53,7 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
 
     # BA: This function should be measured.
     def complete_login(self, request, app, token: SocialToken, **kwargs):
-        beginning_time = time.perf_counter()
+        beginning_time = time.process_time()
         id_token_str = kwargs["response"].get("id_token")
         fetch_userinfo = app.settings.get("fetch_userinfo", True)
         data = {}
@@ -64,7 +64,7 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
         # Original:
         # return self.get_provider().sociallogin_from_response(request, data)
         sociallogin_return_value = self.get_provider().sociallogin_from_response(request, data)
-        end_time = time.perf_counter()
+        end_time = time.process_time()
         oidc_logger.info(f"'complete_login' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
         return sociallogin_return_value
 
@@ -86,7 +86,17 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
         https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
         """
         verify_signature = not self.did_fetch_access_token
-        return jwtkit.verify_and_decode(
+        # Original:
+        #return jwtkit.verify_and_decode(
+        #    credential=id_token,
+        #    keys_url=self.openid_config["jwks_uri"],
+        #    issuer=self.openid_config["issuer"],
+        #    audience=app.client_id,
+        #    lookup_kid=jwtkit.lookup_kid_jwk,
+        #    verify_signature=verify_signature,
+        #)
+        beginning_time = time.process_time()
+        jwtkit_vad_return_value = jwtkit.verify_and_decode(
             credential=id_token,
             keys_url=self.openid_config["jwks_uri"],
             issuer=self.openid_config["issuer"],
@@ -94,6 +104,10 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
             lookup_kid=jwtkit.lookup_kid_jwk,
             verify_signature=verify_signature,
         )
+        end_time = time.process_time()
+        oidc_logger.info(f"'_decode_id_token' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
+        return jwtkit_vad_return_value
+
 
     def get_callback_url(self, request, app):
         callback_url = reverse(
