@@ -141,9 +141,12 @@ class SAMLProvider(Provider):
             **kwargs,
         )
         end_time = time.process_time()
-        saml_logger.info(f"'build_auth' @ allauth.socialaccount.providers.saml.provder called w/ eval time {build_auth_end_time - beginning_time}")
-        saml_logger.info(f"'login' @ allauth.socialaccount.providers.saml.provder called w/ eval time {auth_login_end_time - build_auth_end_time}")
-        saml_logger.info(f"'redirect' @ allauth.socialaccount.providers.saml.provder called w/ eval time {end_time - beginning_time}")
+        saml_logger.info(f"'redirect' @ allauth.socialaccount.providers.saml.provider called w/ eval time {end_time - beginning_time}")
+        # These logs are written after the redirect, so that the redirect can
+        # still be used to initialize a new user in the json file that is created
+        # based on the log file.
+        saml_logger.info(f"'build_auth' @ allauth.socialaccount.providers.saml.provider called w/ eval time {build_auth_end_time - beginning_time}")
+        saml_logger.info(f"'login' @ allauth.socialaccount.providers.saml.provider called w/ eval time {auth_login_end_time - build_auth_end_time}")
 
         return HttpResponseRedirect(redirect)
 

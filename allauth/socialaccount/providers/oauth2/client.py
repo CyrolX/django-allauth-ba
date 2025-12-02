@@ -111,7 +111,7 @@ class OAuth2Client:
             oidc_logger.debug(f"'get_access_token' failed.")
             raise OAuth2Error("Error retrieving access token: %s" % resp.content)
         end_time = time.process_time()
-        oidc_logger.info(f"'get_access_token' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
+        oidc_logger.info(f"'get_access_token' @ allauth.socialaccount.providers.oauth2.client called w/ eval time {end_time - beginning_time}")
         oidc_logger.debug(f"The execution of 'get_access_token' was successful.")
         return access_token
 
