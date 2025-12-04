@@ -259,10 +259,7 @@ class Provider:
         state = {"process": process, "data": data, **kwargs}
         if next_url:
             state["next"] = next_url
-        if self.name == "SAML":
-            saml_logger.warning(f"'state' @ allauth.socialaccount.providers.saml.provider is {state}")
-        if self.name == "OpenID Connect":
-            oidc_logger.warning(f"'state' @ allauth.socialaccount.providers.saml.provider is {state}")
+
         return statekit.stash_state(request, state, state_id=state_id)
 
     def unstash_redirect_state(self, request, state_id):

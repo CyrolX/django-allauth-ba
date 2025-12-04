@@ -49,14 +49,12 @@ class SAMLViewMixin:
 class ACSView(SAMLViewMixin, View):
     def dispatch(self, request, organization_slug):
         saml_logger.debug("The ACSView's dispatch method has been called.")
-        saml_logger.warning(f"'request' @ allauth.socialaccount.providers.saml.views.ACSView is {request}")
         beginning_time = time.process_time()
         url = reverse(
             "saml_finish_acs",
             kwargs={"organization_slug": organization_slug},
         )
         response = HttpResponseRedirect(url)
-        saml_logger.warning(f"'response' @ allauth.socialaccount.providers.saml.views.ACSView is {response}")
         acs_session = LoginSession(request, "saml_acs_session", "saml-acs-session")
         acs_session.store.update({"request": httpkit.serialize_request(request)})
         acs_session.save(response)
@@ -93,7 +91,6 @@ class FinishACSView(SAMLViewMixin, View):
             return auth_error
 
         auth = build_auth(acs_request, provider)
-        saml_logger.warning(f"'auth.__nameid' @ allauth.socialaccount.providers.saml.views.FinishACSView is {auth.get_nameid()}")
         error_reason = None
         errors = []
         try:
