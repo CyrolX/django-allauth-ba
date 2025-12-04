@@ -56,6 +56,7 @@ class ACSView(SAMLViewMixin, View):
             kwargs={"organization_slug": organization_slug},
         )
         response = HttpResponseRedirect(url)
+        saml_logger.warning(f"'response' @ allauth.socialaccount.providers.saml.views.ACSView is {response}")
         acs_session = LoginSession(request, "saml_acs_session", "saml-acs-session")
         acs_session.store.update({"request": httpkit.serialize_request(request)})
         acs_session.save(response)
