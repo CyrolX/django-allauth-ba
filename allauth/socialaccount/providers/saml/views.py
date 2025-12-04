@@ -173,7 +173,7 @@ class FinishACSView(SAMLViewMixin, View):
                 login.state["next"] = next_url
         sociallogin_return = complete_social_login(request, login)
         end_time = time.process_time()
-        saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
+        saml_logger.info(f"<{login.state['data']['eval_user']}> 'dispatch' @ allauth.socialaccount.providers.saml.views.FinishACSView called w/ eval time {end_time - beginning_time}")
         saml_logger.debug("Execution of 'dispatch' was successful.")
         # Original:
         #return complete_social_login(request, login)
