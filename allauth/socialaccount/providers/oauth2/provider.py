@@ -106,6 +106,9 @@ class OAuth2Provider(Provider):
 
     # BA: This function should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
+        t_uid = f"{request}".split('_')[-1].split("'")[0]
+        data = {'eval_user': f"t_user_{t_uid}", 'eval_method': "saml"}
+
         beginning_time = time.process_time()
         app = self.app
         oauth2_adapter = self.get_oauth2_adapter(request)
@@ -114,7 +117,6 @@ class OAuth2Provider(Provider):
         auth_params = kwargs.pop("auth_params", None)
         if auth_params is None:
             auth_params = self.get_auth_params()
-        oidc_logger.warning(f"'request' @ allauth.socialaccount.providers.oauth2.provider is {request}")
         pkce_params = self.get_pkce_params()
         code_verifier = pkce_params.pop("code_verifier", None)
         auth_params.update(pkce_params)
