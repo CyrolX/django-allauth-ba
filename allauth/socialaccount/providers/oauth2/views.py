@@ -120,6 +120,9 @@ class OAuth2CallbackView(OAuth2View):
         beginning_time = time.process_time()
         provider = self.adapter.get_provider()
         state, resp = self._get_state(request, provider)
+        oidc_logger.warning(f"'request' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView is {request}")
+        oidc_logger.warning(f"'state' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView is {state}")
+        oidc_logger.warning(f"'resp' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView is {resp}")
         if resp:
             end_time = time.process_time()
             oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")

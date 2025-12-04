@@ -61,6 +61,8 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
             data["userinfo"] = self._fetch_user_info(token.token)
         if id_token_str:
             data["id_token"] = self._decode_id_token(app, id_token_str)
+
+        oidc_logger.warning(f"'data' @ allauth.socialaccount.providers.openid_connect.views is {data}")
         # Original:
         # return self.get_provider().sociallogin_from_response(request, data)
         sociallogin_return_value = self.get_provider().sociallogin_from_response(request, data)

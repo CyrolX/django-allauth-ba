@@ -91,6 +91,7 @@ class FinishACSView(SAMLViewMixin, View):
             return auth_error
 
         auth = build_auth(acs_request, provider)
+        saml_logger.warning(f"'auth.__nameid' @ allauth.socialaccount.providers.saml.views.FinishACSView is {auth.get_nameid()}")
         error_reason = None
         errors = []
         try:
