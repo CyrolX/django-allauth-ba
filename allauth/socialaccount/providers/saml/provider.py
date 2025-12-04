@@ -125,7 +125,7 @@ class SAMLProvider(Provider):
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
         from allauth.socialaccount.providers.saml.utils import build_auth
         t_uid = f"{request}".split('_')[-1].split("'")[0]
-        data = {'eval_user': f"t_user_{t_uid}"}
+        data = {'eval_user': f"t_user_{t_uid}", 'eval_method': "saml"}
 
         beginning_time = time.process_time()
         saml_logger.warning(f"'request' @ allauth.socialaccount.providers.saml.provider is {data}")
