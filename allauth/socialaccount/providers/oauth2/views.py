@@ -68,9 +68,9 @@ class OAuth2Adapter:
             token.expires_at = timezone.now() + timedelta(seconds=int(expires_in))
         return token
 
-    def get_access_token_data(self, request, app, client, pkce_code_verifier=None):
+    def get_access_token_data(self, request, app, client, pkce_code_verifier=None, tu_name=None):
         code = get_request_param(self.request, "code")
-        data = client.get_access_token(code, pkce_code_verifier=pkce_code_verifier)
+        data = client.get_access_token(code, pkce_code_verifier=pkce_code_verifier, tu_name=tu_name)
         self.did_fetch_access_token = True
         return data
 
@@ -120,12 +120,9 @@ class OAuth2CallbackView(OAuth2View):
         beginning_time = time.process_time()
         provider = self.adapter.get_provider()
         state, resp = self._get_state(request, provider)
-        oidc_logger.warning(f"'request' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView is {request}")
-        oidc_logger.warning(f"'state' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView is {state}")
-        oidc_logger.warning(f"'resp' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView is {resp}")
         if resp:
             end_time = time.process_time()
-            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<{state['data']['eval_user']}> 'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"Execution of 'dispatch' successful. Termination was due to a response being present in the state.")
             return resp
         if "error" in request.GET or "code" not in request.GET:
@@ -146,14 +143,15 @@ class OAuth2CallbackView(OAuth2View):
             #    },
             #)
             end_time = time.process_time()
-            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<{state['data']['eval_user']}> 'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'dispatch' failed: Error was {error}")
         app = provider.app
         client = self.adapter.get_client(self.request, app)
 
         try:
+            # tu_name is used so we can access the user name in the client.
             access_token = self.adapter.get_access_token_data(
-                request, app, client, pkce_code_verifier=state.get("pkce_code_verifier")
+                request, app, client, pkce_code_verifier=state.get("pkce_code_verifier"), tu_name=state['data']['eval_user']
             )
             token = self.adapter.parse_token(access_token)
             if app.pk:
@@ -167,7 +165,7 @@ class OAuth2CallbackView(OAuth2View):
             # Original:
             #return complete_social_login(request, login)
             end_time = time.process_time()
-            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<{state['data']['eval_user']}> 'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"Execution of 'dispatch' successful.")
             return sociallogin_return
         except (
@@ -180,7 +178,7 @@ class OAuth2CallbackView(OAuth2View):
                 request, provider, exception=e, extra_context={"state": state}
             )
             end_time = time.process_time()
-            oidc_logger.info(f"'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<{state['data']['eval_user']}> 'dispatch' @ allauth.socialaccount.providers.oauth2.views.OAuth2CallbackView called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'dispatch' failed: Error was {e}")
             return auth_error
             # Original:

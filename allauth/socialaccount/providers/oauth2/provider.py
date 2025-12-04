@@ -106,6 +106,11 @@ class OAuth2Provider(Provider):
 
     # BA: This function should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
+        # A hack that works. The request is a Django WSGIRequest oobject. Fortunately
+        # the string representation of said object contains the entire link used to
+        # get here, allowing for the injection of a URL-Parameter. This parameter is
+        # extracted here and stored in the state. This allows the identification of
+        # measurements.
         t_uid = f"{request}".split('_')[-1].split("'")[0]
         data = {'eval_user': f"t_user_{t_uid}", 'eval_method': "saml"}
 
@@ -142,7 +147,7 @@ class OAuth2Provider(Provider):
                 )
             )
             end_time = time.process_time()
-            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<t_user_{t_uid}> 'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug("The execution of 'redirect' was successful.")
             return response_redirect
         except OAuth2Error as e:
@@ -154,6 +159,6 @@ class OAuth2Provider(Provider):
                 request, self, extra_context={"state_id": state_id}, exception=e
             )
             end_time = time.process_time()
-            oidc_logger.info(f"'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<t_user_{t_uid}> 'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'redirect' failed.")
             return auth_error_return_value

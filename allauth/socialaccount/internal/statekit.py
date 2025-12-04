@@ -50,15 +50,6 @@ def stash_state(request, state: Dict[str, Any], state_id: Optional[str] = None) 
         state_id = get_adapter().generate_state_param(state)
     states[state_id] = (state, time.time())
     request.session[STATES_SESSION_KEY] = states
-    if state['data'] is None or 'eval_method' not in state['data'].keys():
-        return state_id
-    
-    if state['data']['eval_method'] == 'saml':
-        saml_logger.warning(f"'state' @ allauth.socialaccount.internal.statekit.stash is {state}")
-        saml_logger.warning(f"'states' @ allauth.socialaccount.internal.statekit.stash is {states}")
-    elif state['data']['eval_method'] == 'oidc':
-        oidc_logger.warning(f"'state' @ allauth.socialaccount.internal.statekit.stash is {state}")
-        oidc_logger.warning(f"'states' @ allauth.socialaccount.internal.statekit.stash is {states}")
     return state_id
 
 
@@ -70,15 +61,6 @@ def unstash_state(request, state_id: str) -> Optional[Dict[str, Any]]:
         state = state_ts[0]
         del states[state_id]
         request.session[STATES_SESSION_KEY] = states
-    if state['data'] is None or 'eval_method' not in state['data'].keys():
-        return state_id
-    
-    if state['data']['eval_method'] == 'saml':
-        saml_logger.warning(f"'state' @ allauth.socialaccount.internal.statekit.unstash is {state}")
-        saml_logger.warning(f"'states' @ allauth.socialaccount.internal.statekit.unstash is {states}")
-    elif state['data']['eval_method'] == 'oidc':
-        oidc_logger.warning(f"'state' @ allauth.socialaccount.internal.statekit.unstash is {state}")
-        oidc_logger.warning(f"'states' @ allauth.socialaccount.internal.statekit.unstash is {states}")
     return state
 
 

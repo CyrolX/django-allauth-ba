@@ -124,6 +124,11 @@ class SAMLProvider(Provider):
     # BA: This should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
         from allauth.socialaccount.providers.saml.utils import build_auth
+        # A hack that works. The request is a Django WSGIRequest oobject. Fortunately
+        # the string representation of said object contains the entire link used to
+        # get here, allowing for the injection of a URL-Parameter. This parameter is
+        # extracted here and stored in the state. This allows the identification of
+        # measurements.
         t_uid = f"{request}".split('_')[-1].split("'")[0]
         data = {'eval_user': f"t_user_{t_uid}", 'eval_method': "saml"}
 

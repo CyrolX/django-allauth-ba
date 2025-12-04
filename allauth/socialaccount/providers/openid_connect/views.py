@@ -60,14 +60,13 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
         if fetch_userinfo or (not id_token_str):
             data["userinfo"] = self._fetch_user_info(token.token)
         if id_token_str:
-            data["id_token"] = self._decode_id_token(app, id_token_str)
+            data["id_token"] = self._decode_id_token(app, id_token_str, data['userinfo']['preferred_username'])
 
-        oidc_logger.warning(f"'data' @ allauth.socialaccount.providers.openid_connect.views is {data}")
         # Original:
         # return self.get_provider().sociallogin_from_response(request, data)
         sociallogin_return_value = self.get_provider().sociallogin_from_response(request, data)
         end_time = time.process_time()
-        oidc_logger.info(f"'complete_login' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
+        oidc_logger.info(f"<{data['userinfo']['preferred_username']}> 'complete_login' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
         return sociallogin_return_value
 
     def _fetch_user_info(self, access_token: str) -> dict:
@@ -79,7 +78,7 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
         response.raise_for_status()
         return response.json()
 
-    def _decode_id_token(self, app: SocialApp, id_token: str) -> dict:
+    def _decode_id_token(self, app: SocialApp, id_token: str, uid: str) -> dict:
         """
         If the token was received by direct communication protected by
         TLS between this library and Google, we are allowed to skip checking the
@@ -107,7 +106,7 @@ class OpenIDConnectOAuth2Adapter(OAuth2Adapter):
             verify_signature=verify_signature,
         )
         end_time = time.process_time()
-        oidc_logger.info(f"'_decode_id_token' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
+        oidc_logger.info(f"<{uid}> '_decode_id_token' @ allauth.socialaccount.providers.openid_connect.views called w/ eval time {end_time - beginning_time}")
         return jwtkit_vad_return_value
 
 

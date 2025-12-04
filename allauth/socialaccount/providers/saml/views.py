@@ -59,6 +59,11 @@ class ACSView(SAMLViewMixin, View):
         acs_session.store.update({"request": httpkit.serialize_request(request)})
         acs_session.save(response)
         end_time = time.process_time()
+        # This measurement cannot be identified, yet it can be deduced which measurement
+        # of the ACSView belongs to which measurement of the FinishACSView by taking the
+        # order in the log into account. It is possible to identify the User for the
+        # FinishACSView. For the most part it is the case, that the ACSView and the first
+        # FinishACSView following the ACSView measurement belong together.
         saml_logger.info(f"'dispatch' @ allauth.socialaccount.providers.saml.views.ACSView called w/ eval time {end_time - beginning_time}")
         return response
 

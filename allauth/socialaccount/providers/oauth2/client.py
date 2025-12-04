@@ -54,7 +54,7 @@ class OAuth2Client:
         return "%s?%s" % (authorization_url, urlencode(params))
 
     # BA: This function should be measured.
-    def get_access_token(self, code, pkce_code_verifier=None, extra_data=None):
+    def get_access_token(self, code, pkce_code_verifier=None, extra_data=None, tu_name=None):
         beginning_time = time.process_time()
         data = {
             "redirect_uri": self.callback_url,
@@ -107,11 +107,11 @@ class OAuth2Client:
                 access_token = dict(parse_qsl(resp.text))
         if not access_token or "access_token" not in access_token:
             end_time = time.process_time()
-            oidc_logger.info(f"'get_access_token' @ allauth.socialaccount.providers.oauth2.client called w/ eval time {end_time - beginning_time}")
+            oidc_logger.info(f"<{tu_name}> 'get_access_token' @ allauth.socialaccount.providers.oauth2.client called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug(f"'get_access_token' failed.")
             raise OAuth2Error("Error retrieving access token: %s" % resp.content)
         end_time = time.process_time()
-        oidc_logger.info(f"'get_access_token' @ allauth.socialaccount.providers.oauth2.client called w/ eval time {end_time - beginning_time}")
+        oidc_logger.info(f"<{tu_name}> 'get_access_token' @ allauth.socialaccount.providers.oauth2.client called w/ eval time {end_time - beginning_time}")
         oidc_logger.debug(f"The execution of 'get_access_token' was successful.")
         return access_token
 
