@@ -126,8 +126,11 @@ class SAMLProvider(Provider):
         from allauth.socialaccount.providers.saml.utils import build_auth
 
         beginning_time = time.process_time()
+        saml_logger.warning(f"'request' @ allauth.socialaccount.providers.saml.provider is {request}")
+        saml_logger.warning(f"'process' @ allauth.socialaccount.providers.saml.provider is {process}")
+        saml_logger.warning(f"'next_url' @ allauth.socialaccount.providers.saml.provider is {next_url}")
+        saml_logger.warning(f"'data' @ allauth.socialaccount.providers.saml.provider is {data}")
         auth = build_auth(request, self)
-        saml_logger.warning(f"'auth.__nameid' @ allauth.socialaccount.providers.saml.provider is {auth.get_nameid()}")
         build_auth_end_time = time.process_time()
         # If we pass `return_to=None` `auth.login` will use the URL of the
         # current view.

@@ -16,6 +16,10 @@ from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.internal import statekit
 from allauth.socialaccount.providers.base.constants import AuthProcess
 
+# BA Imports
+from allauth.allauth_loggers import oidc_logger
+from allauth.allauth_loggers import saml_logger
+
 
 class ProviderException(Exception):
     pass
@@ -255,6 +259,10 @@ class Provider:
         state = {"process": process, "data": data, **kwargs}
         if next_url:
             state["next"] = next_url
+        if self.name == "SAML":
+            saml_logger.warning(f"'state' @ allauth.socialaccount.providers.saml.provider is {state}")
+        if self.name == "OpenID Connect":
+            oidc_logger.warning(f"'state' @ allauth.socialaccount.providers.saml.provider is {state}")
         return statekit.stash_state(request, state, state_id=state_id)
 
     def unstash_redirect_state(self, request, state_id):
