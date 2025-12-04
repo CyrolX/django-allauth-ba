@@ -112,6 +112,7 @@ class OAuth2Provider(Provider):
         client = oauth2_adapter.get_client(request, app)
 
         auth_params = kwargs.pop("auth_params", None)
+        oidc_logger.warning(f"'auth_params' @ allauth.socialaccount.providers.oauth2.provider is {auth_params}")
         if auth_params is None:
             auth_params = self.get_auth_params()
         pkce_params = self.get_pkce_params()
