@@ -123,7 +123,7 @@ class OAuth2Provider(Provider):
         if auth_params is None:
             auth_params = self.get_auth_params()
         pkce_beginning_time = time.process_time()
-        pkce_params = self.get_pkce_params(tu = f"t_user_{t_uid}")
+        pkce_params = self.get_pkce_params()
         code_verifier = pkce_params.pop("code_verifier", None)
         auth_params.update(pkce_params)
         pkce_end_time = time.process_time()
