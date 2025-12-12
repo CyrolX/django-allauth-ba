@@ -151,7 +151,7 @@ class OAuth2Provider(Provider):
             end_time = time.process_time()
             oidc_logger.info(f"<t_user_{t_uid}> 'redirect' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             oidc_logger.debug("The execution of 'redirect' was successful.")
-            oidc_logger.info(f"<t_user_{t_uid}> 'pkce' @ allauth.socialaccount.providers.oauth2.provider.redirect called w/ eval time {pkce_end_time - pkce_beginning_time}")
+            oidc_logger.info(f"<t_user_{t_uid}> 'pkce' @ allauth.socialaccount.providers.oauth2.provider calculated w/ eval time {(pkce_end_time - pkce_beginning_time):.18f}")
             if pkce_params != {}:
                 oidc_logger.debug("PKCE Parameters successfully initialized")
             else:
