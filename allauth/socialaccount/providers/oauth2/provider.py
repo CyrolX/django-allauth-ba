@@ -32,14 +32,20 @@ class OAuth2Provider(Provider):
     def get_callback_url(self):
         return reverse(self.id + "_callback")
 
-    def get_pkce_params(self) -> dict:
+    def get_pkce_params(self, tu = None) -> dict:
+        beginning_time = time.process_time()
         enabled = self.app.settings.get("oauth_pkce_enabled")
         if enabled is None:
             settings = self.get_settings()
             enabled = settings.get("OAUTH_PKCE_ENABLED", self.pkce_enabled_default)
         if enabled:
-            pkce_code_params = generate_code_challenge()
+            pkce_code_params = generate_code_challenge(tu = tu)
+            end_time = time.process_time()
+            oidc_logger.info(f"<{tu}> 'get_pkce_params' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}")
             return pkce_code_params
+        end_time = time.process_time()
+        oidc_logger.info(f"<{tu}> 'get_pkce_params' @ allauth.socialaccount.providers.oauth2.provider called w/ eval time {end_time - beginning_time}") 
+        oidc_logger.warning(f"<{tu}> 'get_pkce_params' did not generate a code challenge because PKCE is not enabled")
         return {}
 
     def get_auth_params(self):
@@ -122,7 +128,7 @@ class OAuth2Provider(Provider):
         auth_params = kwargs.pop("auth_params", None)
         if auth_params is None:
             auth_params = self.get_auth_params()
-        pkce_params = self.get_pkce_params()
+        pkce_params = self.get_pkce_params(tu = f"t_user_{t_uid}")
         code_verifier = pkce_params.pop("code_verifier", None)
         auth_params.update(pkce_params)
 
