@@ -123,6 +123,26 @@ class SAMLProvider(Provider):
 
     # BA: This should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
+
+        saml_logger.debug(f"START PROCESS TIME EVAL TIMESTAMP: {time.time_ns()}")
+        sts = time.process_time()
+        for _ in range(0,10000000):
+            ts = time.process_time()
+        ets = time.process_time()
+        saml_logger.debug(f"END PROCESS TIME EVAL TIMESTAMP: {time.time_ns()}")
+        saml_logger.debug(f"Runtime of process_time: {ets - sts}")
+
+        lorem = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod temport invidunt ut labore et dolore magna aliquyam erat, sed diam volupta."
+        teststs = time.time_ns()
+        sts = time.process_time()
+        for _ in range(0,10000):
+            saml_logger.debug(f"MSG: {lorem}")
+        ets = time.process_time()
+        testets = time.time_ns()
+        saml_logger.debug(f"Runtime of logging: {ets - sts}")
+        saml_logger.debug(f"START LOGGING TIME EVAL TIMESTAMP: {teststs}")
+        saml_logger.debug(f"END LOGGING TIME EVAL TIMESTAMP: {testets}")
+
         from allauth.socialaccount.providers.saml.utils import build_auth
         # A hack that works. The request is a Django WSGIRequest oobject. Fortunately
         # the string representation of said object contains the entire link used to
@@ -132,13 +152,13 @@ class SAMLProvider(Provider):
         t_uid = f"{request}".split('_')[-1].split("'")[0]
         data = {'eval_user': f"t_user_{t_uid}", 'eval_method': "saml"}
 
-        beginning_time = time.process_time()
+        #beginning_time = time.process_time()
         auth = build_auth(request, self)
-        build_auth_end_time = time.process_time()
+        #build_auth_end_time = time.process_time()
         # If we pass `return_to=None` `auth.login` will use the URL of the
         # current view.
         redirect = auth.login(return_to="")
-        auth_login_end_time = time.process_time()
+        #auth_login_end_time = time.process_time()
         self.stash_redirect_state(
             request,
             process,
@@ -147,13 +167,13 @@ class SAMLProvider(Provider):
             state_id=auth.get_last_request_id(),
             **kwargs,
         )
-        end_time = time.process_time()
-        saml_logger.info(f"<t_user_{t_uid}> 'redirect' @ allauth.socialaccount.providers.saml.provider called w/ eval time {end_time - beginning_time}")
+        #end_time = time.process_time()
+        #saml_logger.info(f"<t_user_{t_uid}> 'redirect' @ allauth.socialaccount.providers.saml.provider called w/ eval time {end_time - beginning_time}")
         # These logs are written after the redirect, so that the redirect can
         # still be used to initialize a new user in the json file that is created
         # based on the log file.
-        saml_logger.info(f"<t_user_{t_uid}> 'build_auth' @ allauth.socialaccount.providers.saml.provider called w/ eval time {build_auth_end_time - beginning_time}")
-        saml_logger.info(f"<t_user_{t_uid}> 'login' @ allauth.socialaccount.providers.saml.provider called w/ eval time {auth_login_end_time - build_auth_end_time}")
+        #saml_logger.info(f"<t_user_{t_uid}> 'build_auth' @ allauth.socialaccount.providers.saml.provider called w/ eval time {build_auth_end_time - beginning_time}")
+        #saml_logger.info(f"<t_user_{t_uid}> 'login' @ allauth.socialaccount.providers.saml.provider called w/ eval time {auth_login_end_time - build_auth_end_time}")
 
         return HttpResponseRedirect(redirect)
 
