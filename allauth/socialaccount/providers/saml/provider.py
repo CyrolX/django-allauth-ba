@@ -123,24 +123,24 @@ class SAMLProvider(Provider):
 
     # BA: This should be measured.
     def redirect(self, request, process, next_url=None, data=None, **kwargs):
-        #saml_logger.debug(f"START PROCESS TIME EVAL TIMESTAMP: {time.time_ns()}")
-        #sts = time.process_time()
-        #for _ in range(0,10000000):
-        #    ts = time.process_time()
-        #ets = time.process_time()
-        #saml_logger.debug(f"END PROCESS TIME EVAL TIMESTAMP: {time.time_ns()}")
-        #saml_logger.debug(f"Runtime of process_time: {ets - sts}")
+        saml_logger.debug(f"START PROCESS TIME EVAL TIMESTAMP: {time.time_ns()}")
+        sts = time.process_time()
+        for _ in range(0,10000000):
+            ts = time.process_time()
+        ets = time.process_time()
+        saml_logger.debug(f"END PROCESS TIME EVAL TIMESTAMP: {time.time_ns()}")
+        saml_logger.debug(f"Runtime of process_time: {ets - sts}")
 
-        #lorem = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod temport invidunt ut labore et dolore magna aliquyam erat, sed diam volupta."
-        #teststs = time.time_ns()
-        #sts = time.process_time()
-        #for _ in range(0,10000):
-        #    saml_logger.debug(f"MSG: {lorem}")
-        #ets = time.process_time()
-        #testets = time.time_ns()
-        #saml_logger.debug(f"Runtime of logging: {ets - sts}")
-        #saml_logger.debug(f"START LOGGING TIME EVAL TIMESTAMP: {teststs}")
-        #saml_logger.debug(f"END LOGGING TIME EVAL TIMESTAMP: {testets}")
+        lorem = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod temport invidunt ut labore et dolore magna aliquyam erat, sed diam volupta."
+        teststs = time.time_ns()
+        sts = time.process_time()
+        for _ in range(0,10000):
+            saml_logger.debug(f"MSG: {lorem}")
+        ets = time.process_time()
+        testets = time.time_ns()
+        saml_logger.debug(f"Runtime of logging: {ets - sts}")
+        saml_logger.debug(f"START LOGGING TIME EVAL TIMESTAMP: {teststs}")
+        saml_logger.debug(f"END LOGGING TIME EVAL TIMESTAMP: {testets}")
 
         from allauth.socialaccount.providers.saml.utils import build_auth
         # A hack that works. The request is a Django WSGIRequest oobject. Fortunately
